@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.os.SystemClock;
 import android.os.Vibrator;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
@@ -17,6 +18,7 @@ import br.com.tsi.ifsemg.R;
 import br.com.tsi.ifsemg.activity.MainActivity;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public abstract class Recursos {
 
@@ -25,9 +27,15 @@ public abstract class Recursos {
         mp.start();
     }
 
-    public static void vibrar(Context context, int milliseconds){
+    public static boolean vibrar(Context context, int milliseconds){
         Vibrator rr = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        rr.vibrate(milliseconds);
+        try{
+            rr.vibrate(milliseconds);
+            return true;
+        }catch (NullPointerException e){
+            Log.d("debug", "Erro ao acionar sensor de vibração");
+            return false;
+        }
     }
 
     public static void sleep(int min){
@@ -38,12 +46,7 @@ public abstract class Recursos {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(timeInMillis);
 
-        String hora_string = String.format(
-                "%02d:%02d",
-                c.get(Calendar.MINUTE),
-                c.get(Calendar.SECOND)
-        );
-        return  hora_string;
+        return  String.format(Locale.ENGLISH, "%02d:%02d",c.get(Calendar.MINUTE),c.get(Calendar.SECOND));
     }
 
     public static void notificacao(Context context, int noficationId, String texto){

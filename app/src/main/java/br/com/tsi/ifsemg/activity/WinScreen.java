@@ -30,19 +30,17 @@ public class WinScreen extends Activity {
         setContentView(R.layout.activity_win_screen);
 
         this.pontuacao_list = (ListView) findViewById(R.id.pontuacao_list);
-        this.usuarioDao = new UsuarioDAO(this);
-        long pontuacao = getIntent().getLongExtra("pontuacao", 0);
-        long duracao = getIntent().getLongExtra("duracao", 0);
+        long pontuacao = getIntent().getLongExtra("pontuacao", -1);
+        long duracao = getIntent().getLongExtra("duracao", -1);
 
-        if(duracao > 0)
-            registrarNovaPontuacao(pontuacao, duracao);
+        if(duracao > -1)
+            obterDadosJogador(pontuacao, duracao);
         exibirPontuacoes();
     }
 
-    public boolean registrarNovaPontuacao(final long pontuacao, final long duracao){
+    public boolean obterDadosJogador(final long pontuacao, final long duracao){
         // Cria a caixa de diálogo para obter o nome do usuário
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
 
         builder.setTitle(R.string.forneca_nome_jogador_title);
         String mensagem = getResources().getString(R.string.forneca_nome_jogador);
@@ -53,46 +51,38 @@ public class WinScreen extends Activity {
         builder.setView(input);
 
         builder.setPositiveButton(R.string.salvar, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        String nome_usuario = input.getText().toString();
-                        if(nome_usuario.isEmpty())
-                            nome_usuario = "Anônimo";
-                        // Obtem nome do usuário
-                        Usuario user = new Usuario(
-                                nome_usuario,
-                                "joao@email.com"
-                        );
-                        user.setPontos(pontuacao);
-                        user.setTempo(duracao);
-                        usuarioDao.insert(user);
-
-                        exibirPontuacoes();
-                        usuarioDao.close();
-                        //grava no banco de dados
-                    }
-                });
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String nome = input.getText().toString();
+                registrarNovaPontuacao(nome, pontuacao, duracao);
+            }
+        });
 
         AlertDialog dialog = builder.create();
         dialog.show();
         return true;
     }
 
+    private void registrarNovaPontuacao(String nome, long pontos, long duracao) {
+        this.usuarioDao = new UsuarioDAO(this);
+        Usuario usuario = new Usuario();
+        usuario.setNome((nome.isEmpty())? "Anônimo" : nome);
+        usuario.setPontos(pontos);
+        usuario.setTempo(duracao);
+
+        usuarioDao.insert(usuario);
+        usuarioDao.close();
+        exibirPontuacoes();
+    }
+
     public void exibirPontuacoes(){
-        // Obtem as pontuacoes do banco de dados
-
-        //for(Usuario u : usuarios){
-        //    Log.d("Usuario", u.getNome());
-        //}
-
-        //List<String> opcoes = new ArrayList<>();
+        this.usuarioDao = new UsuarioDAO(this);
         List<Usuario> usuarios = usuarioDao.all();
-        //ArrayAdapter<Usuario> adaptador = new ArrayAdapter(this, android.R.layout.simple_list_item_1, usuarios);
+
         RankingListAdapter rankingAdapter = new RankingListAdapter(this, 0 , usuarios);
         rankingAdapter.sort(new RankingListAdapter.RankingComparator());
         this.pontuacao_list.setAdapter(rankingAdapter);
-
-        //this.pontuacao_list.setOnItemClickListener(new ClickList());
+        usuarioDao.close();
     }
 
     private class ClickList implements android.widget.AdapterView.OnItemClickListener {

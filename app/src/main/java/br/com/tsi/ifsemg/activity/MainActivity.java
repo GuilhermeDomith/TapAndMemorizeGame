@@ -27,8 +27,8 @@ import java.util.List;
 public class MainActivity extends Activity{
     private final Integer NUMEROS_POSSIVEIS[] = {1, 2, 3, 4, 5, 6};
     private final int PONTUACAO_MAXIMA = 100000;
-    private final int PESO_SUBTRAIR_POR_CLICK = 345;
-    private final int PESO_SUBTRAIR_POR_SEGUNDO = 345;
+    private final int PESO_SUBTRAIR_POR_CLICK = 655;
+    private final int PESO_SUBTRAIR_POR_SEGUNDO = 655;
 
     private List<Integer> sequencia_da_partida;
     private LinkedList<Integer> sequencia_restante;
@@ -46,7 +46,6 @@ public class MainActivity extends Activity{
     public void iniciarJogo(){
         this.back_layout.setBackground(this.back_color_default);
         this.duracao_text.setText(R.string.duracao_inicial);
-        this.handler_duracao = new HandlerDuracao();
         this.contador_click = 0;
 
         iniciarNovaSequencia();
@@ -67,11 +66,8 @@ public class MainActivity extends Activity{
     }
 
     public void jogoVencido() {
-        int descontar = (this.contador_click - this.NUMEROS_POSSIVEIS.length) * this.PESO_SUBTRAIR_POR_CLICK;
         long duracao = handler_duracao.getDuracao();
-        descontar += (duracao / 1000) * PESO_SUBTRAIR_POR_SEGUNDO;
-        long pontos = PONTUACAO_MAXIMA - descontar;
-        if(pontos < 0) pontos = 0;
+        long pontos = obterPontuacao(duracao);
         this.handler_duracao.deleteRunnable();
 
         Intent intent = new Intent(this, WinScreen.class);
@@ -83,7 +79,18 @@ public class MainActivity extends Activity{
         iniciarJogo();
     }
 
+    private long obterPontuacao(long duracao) {
+        long descontar = (this.contador_click - this.NUMEROS_POSSIVEIS.length) * this.PESO_SUBTRAIR_POR_CLICK;
+        descontar += (duracao / 1000) * PESO_SUBTRAIR_POR_SEGUNDO;
+        long pontos = PONTUACAO_MAXIMA - descontar;
+        return (pontos < 0)? 0 : pontos;
+    }
+
     private void numeroClicado(Button numero_btn) {
+        if(this.contador_click == 0)
+            // Inicia o cronômetro
+            this.handler_duracao = new HandlerDuracao(this.duracao_text);
+
         this.contador_click++;
         Button btn = (Button) numero_btn;
         int numero = Integer.parseInt(btn.getText().toString());
@@ -168,16 +175,18 @@ public class MainActivity extends Activity{
         startActivity(intent);
     }
 
-    private class HandlerDuracao extends Handler{
+    private static class HandlerDuracao extends Handler{
 
         private Calendar hora_inicio;
         private Runnable atualiza_hora_run;
+        private TextView text_update;
         private long duracao;
 
-        public HandlerDuracao(){
+        public HandlerDuracao(TextView text_update){
             super();
             this.hora_inicio = Calendar.getInstance();
             this.atualiza_hora_run = getRunnable();
+            this.text_update = text_update;
             this.post(this.atualiza_hora_run);
         }
 
@@ -192,7 +201,7 @@ public class MainActivity extends Activity{
                     duracao = Calendar.getInstance().getTimeInMillis() - hora_inicio.getTimeInMillis();
                     String duracao_string = Recursos.obterMinSegString(duracao);
 
-                    MainActivity.this.duracao_text.setText(duracao_string);
+                    HandlerDuracao.this.text_update.setText(duracao_string);
                     HandlerDuracao.this.postDelayed(this, 100);
                 }
             };
