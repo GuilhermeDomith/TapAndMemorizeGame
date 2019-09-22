@@ -19,25 +19,26 @@ public abstract class Database {
 
     public static <T> boolean insert(String fieldName, T objectT){
         DatabaseReference objectsReference = database.getReference(fieldName);
-        String id = UUID.randomUUID().toString();
-        objectsReference.child(id).setValue(objectT);
+        objectsReference.setValue(objectT);
         return true;
     }
 
-    public static <T> void getValue(String fieldName, final Class<T> classValue,  final GetObjectListener<T> listener){
-        DatabaseReference objectReference = database.getReference(fieldName);
+    public static <T> DatabaseReference getValue(String fieldName, final Class<T> classValue,  final GetObjectListener<T> listener){
+        final DatabaseReference objectReference = database.getReference(fieldName);
         objectReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                listener.getObject(dataSnapshot.getValue(classValue));
+                T obj = (dataSnapshot != null)? dataSnapshot.getValue(classValue) : null;
+                listener.getObject(obj, objectReference, this);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.getObject(null);
+                listener.getObject(null, objectReference, this);
             }
         });
 
+        return objectReference;
     }
 
     public static <T> void all(String fieldName, final Class<T> classValue, final ListObjectsListener<T> listener){
@@ -68,7 +69,7 @@ public abstract class Database {
 
     @FunctionalInterface
     public static interface GetObjectListener<T>{
-        public void getObject(T object);
+        public void getObject(T object, DatabaseReference reference, ValueEventListener listener);
     }
 }
 

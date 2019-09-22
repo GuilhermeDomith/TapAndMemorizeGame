@@ -11,6 +11,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+
 import br.com.tsi.ifsemg.R;
 import br.com.tsi.ifsemg.bd.Database;
 import br.com.tsi.ifsemg.util.RankingListAdapter;
@@ -18,6 +21,7 @@ import br.com.tsi.ifsemg.modelo.Usuario;
 import br.com.tsi.ifsemg.util.Recursos;
 
 import java.util.List;
+import java.util.UUID;
 
 public class WinScreen extends Activity {
     private ListView pontuacao_list;
@@ -53,7 +57,8 @@ public class WinScreen extends Activity {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 String nome = input.getText().toString();
-                registrarNovaPontuacao(nome, pontuacao, duracao);
+                Usuario usuario = registrarNovaPontuacao(nome, pontuacao, duracao);
+                verificarEAtualizarBestScore(usuario);
             }
         });
 
@@ -62,18 +67,46 @@ public class WinScreen extends Activity {
         return true;
     }
 
-    private void registrarNovaPontuacao(String nome, long pontos, long duracao) {
-        Usuario usuario = new Usuario();
-        usuario.setNome((nome.isEmpty())? "Anônimo" : nome);
+    private Usuario registrarNovaPontuacao(String nome, long pontos, long duracao) {
+        final Usuario usuario = new Usuario();
+        usuario.setId(UUID.randomUUID().toString());
+        usuario.setNome(((nome.isEmpty())? "Anônimo" : nome).toUpperCase());
         usuario.setPontos(pontos);
         usuario.setDuracao(duracao);
+        Database.insert(String.format("score/%s", usuario.getId()), usuario);
+        return  usuario;
+    }
 
-        Database.insert("score", usuario);
+    public void verificarEAtualizarBestScore(final Usuario userNewScore){
+        Database.getValue("bestscore", String.class, new Database.GetObjectListener<String>() {
+            @Override
+            public void getObject(final String bestScoreId, DatabaseReference reference, ValueEventListener listener) {
+                reference.removeEventListener(listener);
 
-        /*FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference bestscore = database.getReference("bestscore");
-        DataSnapshot data = bestscore.*/
-        //exibirPontuacoes();
+                if(bestScoreId == null) {
+                    Database.insert("bestscore", userNewScore.getId());
+                    return;
+                }
+
+                Database.getValue(String.format("score/%s", bestScoreId), Usuario.class, new Database.GetObjectListener<Usuario>() {
+                    @Override
+                    public void getObject(Usuario userBestScore, DatabaseReference reference, ValueEventListener listener) {
+                        reference.removeEventListener(listener);
+
+                        if(userNewScore.getPontos() > userBestScore.getPontos()){
+                            Database.insert("bestscore", userNewScore.getId());
+                            return;
+                        }
+
+                        if(userNewScore.getPontos() == userBestScore.getPontos()
+                                && userNewScore.getDuracao() < userBestScore.getDuracao()){
+                            Database.insert("bestscore", userNewScore.getId());
+                            return;
+                        }
+                    }
+                });
+            }
+        });
     }
 
     public void exibirPontuacoes(){

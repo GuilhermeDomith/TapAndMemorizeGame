@@ -4,6 +4,7 @@ import br.com.tsi.ifsemg.util.Recursos;
 
 public class Usuario{
 
+    private String id;
     private String nome;
     private long pontos;
     private long duracao;
@@ -14,7 +15,15 @@ public class Usuario{
     }
 
     public Usuario() {
-        this.nome = "";
+        this.nome = this.id = "";
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getNome() {

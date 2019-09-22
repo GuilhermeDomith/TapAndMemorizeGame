@@ -1,5 +1,7 @@
 package br.com.tsi.ifsemg.util;
 
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
@@ -75,6 +77,16 @@ public abstract class Recursos {
         );
 
         notificationManager.notify(noficationId, builder.build());
+    }
+
+    public static boolean isMyServiceRunning(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

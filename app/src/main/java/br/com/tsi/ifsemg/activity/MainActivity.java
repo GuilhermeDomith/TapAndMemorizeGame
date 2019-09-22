@@ -14,8 +14,12 @@ import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+
 import br.com.tsi.ifsemg.R;
 import br.com.tsi.ifsemg.bd.Database;
+import br.com.tsi.ifsemg.services.CheckScore;
 import br.com.tsi.ifsemg.util.Recursos;
 
 import java.util.ArrayList;
@@ -57,7 +61,6 @@ public class MainActivity extends Activity{
         this.handler_duracao.deleteRunnable();
         iniciarJogo();
         Toast.makeText(this, "O jogo foi reiniciado!", Toast.LENGTH_LONG).show();
-        Recursos.notificacao(this, 12, "O Jogo foi reiniciado");
     }
 
     public void jogarNovamente(){
@@ -124,12 +127,8 @@ public class MainActivity extends Activity{
         this.back_color_default = this.back_layout.getBackground();
         this.contador_click = 0;
 
-        Database.getValue("teste", Long.class, new Database.GetObjectListener<Long>() {
-            @Override
-            public void getObject(Long object) {
-                Toast.makeText(MainActivity.this, object.toString(), Toast.LENGTH_LONG).show();
-            }
-        });
+        if(!Recursos.isMyServiceRunning(this, CheckScore.class))
+            startService(new Intent(getBaseContext(), CheckScore.class));
 
         iniciarJogo();
     }
