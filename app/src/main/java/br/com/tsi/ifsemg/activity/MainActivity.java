@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import br.com.tsi.ifsemg.R;
+import br.com.tsi.ifsemg.bd.Database;
 import br.com.tsi.ifsemg.util.Recursos;
 
 import java.util.ArrayList;
@@ -122,6 +123,13 @@ public class MainActivity extends Activity{
         this.duracao_text = (TextView) findViewById(R.id.duracao_text);
         this.back_color_default = this.back_layout.getBackground();
         this.contador_click = 0;
+
+        Database.getValue("teste", Long.class, new Database.GetObjectListener<Long>() {
+            @Override
+            public void getObject(Long object) {
+                Toast.makeText(MainActivity.this, object.toString(), Toast.LENGTH_LONG).show();
+            }
+        });
 
         iniciarJogo();
     }

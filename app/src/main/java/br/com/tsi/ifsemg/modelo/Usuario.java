@@ -4,17 +4,17 @@ import br.com.tsi.ifsemg.util.Recursos;
 
 public class Usuario{
 
-    private String nome, email;
+    private String nome;
     private long pontos;
-    private long tempo;
+    private long duracao;
 
     public Usuario(String nome, String email){
         this.nome = nome;
-        this.email = email;
+        //this.email = email;
     }
 
     public Usuario() {
-        this.nome = this.email = "";
+        this.nome = "";
     }
 
     public String getNome() {
@@ -25,14 +25,6 @@ public class Usuario{
         this.nome = nome;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public long getPontos() {
         return pontos;
     }
@@ -41,17 +33,17 @@ public class Usuario{
         this.pontos = pontos;
     }
 
-    public long getTempo() {
-        return tempo;
+    public long getDuracao() {
+        return duracao;
     }
 
-    public void setTempo(long tempo) {
-        this.tempo = tempo;
+    public void setDuracao(long duracao) {
+        this.duracao = duracao;
     }
 
     @Override
     public String toString() {
-        return String.format("%s \n%s - %d", nome, Recursos.obterMinSegString(tempo), pontos);
+        return String.format("%s \n%s - %d", nome, Recursos.obterMinSegString(duracao), pontos);
     }
 
 }

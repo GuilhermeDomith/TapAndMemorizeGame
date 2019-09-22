@@ -30,19 +30,26 @@ public class RankingListAdapter extends ArrayAdapter<Usuario> {
         Usuario u = this.usuarios.get(position);
         convertView = LayoutInflater.from(this.context).inflate(R.layout.item_ranking, null);
 
-        ImageView image = (ImageView) convertView.findViewById(R.id.usuario_icon);
-        image.setImageResource(R.mipmap.ic_trophy);
+        if(position == 0) {
+            ImageView image = (ImageView) convertView.findViewById(R.id.usuario_icon);
+            image.setImageResource(R.mipmap.ic_trophy);
+        }
 
         TextView nomeUsuarioText = (TextView) convertView.findViewById(R.id.nome_usuario_text);
-        nomeUsuarioText.setText(u.getNome());
-
         TextView pontuacaoText = (TextView) convertView.findViewById(R.id.pontos_text);
-        pontuacaoText.setText(String.format(
-                "%d Pts\n%s",
-                u.getPontos(),
-                Recursos.obterMinSegString(u.getTempo())
-        ));
 
+        String format = "%d Pts\n%s";
+        if(position > 0) {
+            nomeUsuarioText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            pontuacaoText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            format = "%d Pts - %s";
+        }
+        nomeUsuarioText.setText(u.getNome());
+        pontuacaoText.setText(String.format(
+                format,
+                u.getPontos(),
+                Recursos.obterMinSegString(u.getDuracao())
+        ));
         return convertView;
     }
 
@@ -50,7 +57,7 @@ public class RankingListAdapter extends ArrayAdapter<Usuario> {
         @Override
         public int compare(Usuario u1, Usuario u2) {
             if(u1.getPontos() == u2.getPontos())
-                return u1.getTempo() < u2.getTempo() ? -1 : 1 ;
+                return u1.getDuracao() < u2.getDuracao() ? -1 : 1 ;
             return  u1.getPontos() < u2.getPontos() ? 1 : -1 ;
         }
     }

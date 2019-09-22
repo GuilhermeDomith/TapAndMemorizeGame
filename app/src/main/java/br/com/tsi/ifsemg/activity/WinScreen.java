@@ -12,8 +12,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import br.com.tsi.ifsemg.R;
+import br.com.tsi.ifsemg.bd.Database;
 import br.com.tsi.ifsemg.util.RankingListAdapter;
-import br.com.tsi.ifsemg.bd.UsuarioDAO;
 import br.com.tsi.ifsemg.modelo.Usuario;
 import br.com.tsi.ifsemg.util.Recursos;
 
@@ -22,7 +22,6 @@ import java.util.List;
 public class WinScreen extends Activity {
     private ListView pontuacao_list;
     private EditText titulo_win_screen;
-    private UsuarioDAO usuarioDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,25 +63,31 @@ public class WinScreen extends Activity {
     }
 
     private void registrarNovaPontuacao(String nome, long pontos, long duracao) {
-        this.usuarioDao = new UsuarioDAO(this);
         Usuario usuario = new Usuario();
         usuario.setNome((nome.isEmpty())? "Anônimo" : nome);
         usuario.setPontos(pontos);
-        usuario.setTempo(duracao);
+        usuario.setDuracao(duracao);
 
-        usuarioDao.insert(usuario);
-        usuarioDao.close();
-        exibirPontuacoes();
+        Database.insert("score", usuario);
+
+        /*FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference bestscore = database.getReference("bestscore");
+        DataSnapshot data = bestscore.*/
+        //exibirPontuacoes();
     }
 
     public void exibirPontuacoes(){
-        this.usuarioDao = new UsuarioDAO(this);
-        List<Usuario> usuarios = usuarioDao.all();
-
-        RankingListAdapter rankingAdapter = new RankingListAdapter(this, 0 , usuarios);
-        rankingAdapter.sort(new RankingListAdapter.RankingComparator());
-        this.pontuacao_list.setAdapter(rankingAdapter);
-        usuarioDao.close();
+        Database.all("score", Usuario.class, new Database.ListObjectsListener<Usuario>() {
+            @Override
+            public void listObjects(List<Usuario> usuarios) {
+                if(usuarios == null) return;
+                RankingListAdapter rankingAdapter = new RankingListAdapter(
+                        WinScreen.this, 0 , usuarios
+                );
+                rankingAdapter.sort(new RankingListAdapter.RankingComparator());
+                pontuacao_list.setAdapter(rankingAdapter);
+            }
+        });
     }
 
     private class ClickList implements android.widget.AdapterView.OnItemClickListener {

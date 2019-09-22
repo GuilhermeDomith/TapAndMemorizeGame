@@ -1,32 +1,74 @@
 package br.com.tsi.ifsemg.bd;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
+import androidx.annotation.NonNull;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public abstract class Database<T> {
+public abstract class Database {
 
-    protected static final String DATABASE_NAME = "jogo_memorizacao_db2";
-    protected static final int DATABASE_ACCESS = 0;
-    protected static final String SQL_CLEAR= "DROP TABLE IF EXISTS '%s'";
+    private static FirebaseDatabase database = FirebaseDatabase.getInstance();;
 
-    protected String tableName;
-    protected SQLiteDatabase database;
-
-    public Database(Context context, String tableName, String SQLStruct) {
-        this.database = context.openOrCreateDatabase(DATABASE_NAME, DATABASE_ACCESS, null);
-        this.tableName = tableName;
-        this.database.execSQL(SQLStruct);
+    public static <T> boolean insert(String fieldName, T objectT){
+        DatabaseReference objectsReference = database.getReference(fieldName);
+        String id = UUID.randomUUID().toString();
+        objectsReference.child(id).setValue(objectT);
+        return true;
     }
 
-    public void close(){
-        database.close();
-    }
-    public void clear(){
-        database.execSQL(String.format(SQL_CLEAR, tableName));
-    }
-    public abstract boolean insert(T obj);
-    public abstract List<T> all();
+    public static <T> void getValue(String fieldName, final Class<T> classValue,  final GetObjectListener<T> listener){
+        DatabaseReference objectReference = database.getReference(fieldName);
+        objectReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                listener.getObject(dataSnapshot.getValue(classValue));
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.getObject(null);
+            }
+        });
+
+    }
+
+    public static <T> void all(String fieldName, final Class<T> classValue, final ListObjectsListener<T> listener){
+        DatabaseReference objectReference = database.getReference(fieldName);
+        Query query = objectReference.orderByValue();
+
+        query.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<T> list = new ArrayList<T>();
+                for(DataSnapshot data : dataSnapshot.getChildren()){
+                    list.add(data.getValue(classValue));
+                }
+                listener.listObjects(list);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.listObjects(null);
+            }
+        });
+    }
+
+    @FunctionalInterface
+    public static interface ListObjectsListener<T>{
+        public void listObjects(List<T> objects);
+    }
+
+    @FunctionalInterface
+    public static interface GetObjectListener<T>{
+        public void getObject(T object);
+    }
 }
+
